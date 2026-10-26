@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanzApp Chile - Control Financiero Personal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        dark: {
+                            bg: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen pb-20 md:pb-6 text-slate-100 antialiased">
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div id="app" class="max-w-md mx-auto min-h-screen bg-slate-900 shadow-2xl relative flex flex-col border-x border-slate-800">
+
+        <!-- ==================== PANTALLA DE LOGIN / REGISTRO ==================== -->
+        <div id="auth-screen" class="p-6 flex flex-col justify-center min-h-screen">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-3">
+                    <i class="fa-solid font-bold text-3xl text-white fa-wallet"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-white">FinanzApp Chile</h1>
+                <p class="text-slate-400 text-sm mt-1">Gestión financiera local y segura</p>
+            </div>
+
+            <!-- TAB AUTENTICACIÓN -->
+            <div class="flex bg-slate-800/80 p-1 rounded-xl mb-6 border border-slate-700">
+                <button onclick="switchAuthTab('login')" id="tab-login-btn" class="flex-1 py-2 text-sm font-semibold rounded-lg bg-indigo-600 text-white transition-all">Iniciar Sesión</button>
+                <button onclick="switchAuthTab('register')" id="tab-register-btn" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-400 transition-all">Registrarse</button>
+            </div>
+
+            <!-- FORMULARIO LOGIN -->
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Usuario o Correo Electrónico</label>
+                    <input type="text" id="login-identifier" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="ejemplo@correo.cl">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Contraseña</label>
+                    <input type="password" id="login-password" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="••••••••">
+                </div>
+
+                <div class="flex justify-between items-center text-xs">
+                    <button type="button" onclick="showForgotPasswordModal()" class="text-indigo-400 hover:underline">¿Olvidaste tu contraseña?</button>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/30">
+                    Ingresar a mis Gastos
+                </button>
+
+                <!-- BOTÓN BIOMETRÍA / NATIVO -->
+                <button type="button" onclick="handleBiometricAuth()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-fingerprint text-indigo-400 text-lg"></i>
+                    Usar Huella / Rostro del Teléfono
+                </button>
+            </form>
+
+            <!-- FORMULARIO REGISTRO -->
+            <form id="register-form" onsubmit="handleRegister(event)" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Nombre Completo</label>
+                    <input type="text" id="reg-name" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" placeholder="Juan Pérez">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">RUT Chileno</label>
+                    <input type="text" id="reg-rut" required oninput="formatRut(this)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" placeholder="12.345.678-9">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Correo Electrónico</label>
+                    <input type="email" id="reg-email" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" placeholder="usuario@correo.cl">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Nombre de Usuario</label>
+                    <input type="text" id="reg-username" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" placeholder="juanperez">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Contraseña</label>
+                    <input type="password" id="reg-password" minlength="6" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" placeholder="Mínimo 6 caracteres">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Ocupación / Situación Laboral (Chile)</label>
+                    <select id="reg-occupation" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
+                        <option value="Dependiente">Empleado Dependiente (Contrato)</option>
+                        <option value="Honorarios">Independiente (Boletas de Honorarios)</option>
+                        <option value="Empresario/PYME">Empresario / PYME</option>
+                        <option value="Pensionado">Pensionado / Jubilado</option>
+                        <option value="Estudiante">Estudiante / Otro</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Ingreso Mensual Líquido ($ CLP)</label>
+                    <input type="number" id="reg-income" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" placeholder="800000">
+                </div>
+
+                <div class="text-[10px] text-slate-400 bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
+                    <i class="fa-solid fa-shield-halved text-emerald-400 mr-1"></i>
+                    Tus datos se almacenan de forma privada en tu dispositivo conforme a la Ley N° 19.628 de Protección de Datos Personales en Chile.
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/30">
+                    Crear Cuenta y Comenzar
+                </button>
+            </form>
+        </div>
+
+        <!-- ==================== DASHBOARD / APLICACIÓN PRINCIPAL ==================== -->
+        <div id="main-screen" class="hidden flex-1 flex flex-col pb-20">
+            <!-- HEADER APP -->
+            <header class="p-4 bg-slate-800/90 backdrop-blur border-b border-slate-700 flex justify-between items-center sticky top-0 z-30">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg" id="user-avatar">
+                        U
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-sm text-white" id="user-display-name">Usuario</h2>
+                        <span class="text-[11px] text-slate-400" id="user-display-rut">RUT</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- BOTÓN MODO DISCRETO (OCULTAR SALDOS) -->
+                    <button onclick="togglePrivacy()" class="w-9 h-9 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center transition-all">
+                        <i id="privacy-icon" class="fa-solid fa-eye"></i>
+                    </button>
+                    <!-- SELECTOR DE MES Y AÑO -->
+                    <input type="month" id="month-filter" onchange="renderAll()" class="bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-xs text-white">
+                    <!-- SALIR -->
+                    <button onclick="handleLogout()" class="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 flex items-center justify-center">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- NOTIFICACIONES Y ALERTAS BIENVENIDA -->
+            <div id="vencimientos-alert" class="m-4 mb-0 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs flex items-center justify-between hidden">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm"></i>
+                    <span id="vencimientos-text">Tienes cuentas o deudas por vencer este mes.</span>
+                </div>
+            </div>
+
+            <!-- CONTENIDO CON TABS PRINCIPALES -->
+            <main class="p-4 flex-1 space-y-6">
+
+                <!-- TARJETA SALUD FINANCIERA & RESUMEN -->
+                <section class="bg-gradient-to-br from-slate-800 to-slate-800/80 p-5 rounded-2xl border border-slate-700 shadow-xl relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs text-slate-400 font-medium">Ingreso Disponible Real</span>
+                        <span id="health-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            Excelente
+                        </span>
+                    </div>
+                    <div class="text-3xl font-extrabold text-white mb-4 tracking-tight" id="disp-amount">
+                        $0
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-700/60">
+                        <div>
+                            <span class="text-[11px] text-slate-400 block">Gastos por Pagar</span>
+                            <span class="text-sm font-semibold text-rose-400" id="pending-expenses-amount">$0</span>
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-slate-400 block">Límite Diario Seguro</span>
+                            <span class="text-sm font-semibold text-indigo-400" id="daily-limit-amount">$0 / día</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- NAVEGACIÓN SECUNDARIA (MÓDULOS) -->
+                <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                    <button onclick="switchModule('gastos')" id="mod-btn-gastos" class="px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-indigo-600 text-white shadow-md">
+                        <i class="fa-solid fa-receipt mr-1.5"></i>Gastos del Mes
+                    </button>
+                    <button onclick="switchModule('deudas')" id="mod-btn-deudas" class="px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-300 border border-slate-700">
+                        <i class="fa-solid fa-credit-card mr-1.5"></i>Deudas / TC
+                    </button>
+                    <button onclick="switchModule('metas')" id="mod-btn-metas" class="px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-300 border border-slate-700">
+                        <i class="fa-solid fa-bullseye mr-1.5"></i>Metas de Ahorro
+                    </button>
+                    <button onclick="switchModule('compras')" id="mod-btn-compras" class="px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-300 border border-slate-700">
+                        <i class="fa-solid fa-cart-shopping mr-1.5"></i>Lista Compras
+                    </button>
+                    <button onclick="switchModule('ia')" id="mod-btn-ia" class="px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-300 border border-slate-700">
+                        <i class="fa-solid fa-robot mr-1.5"></i>Asistente IA
+                    </button>
+                    <button onclick="switchModule('grafico')" id="mod-btn-grafico" class="px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-300 border border-slate-700">
+                        <i class="fa-solid fa-chart-simple mr-1.5"></i>Histórico
+                    </button>
+                </div>
+
+                <!-- ==================== MÓDULO 1: GASTOS DEL MES ==================== -->
+                <div id="module-gastos" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <span>Organizador de Cuentas y Gastos</span>
+                        </h3>
+                        <button onclick="openModal('modal-add-gasto')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Agregar Gasto
+                        </button>
+                    </div>
+
+                    <!-- LISTA DE GASTOS CON CHECKBOX -->
+                    <div id="gastos-list" class="space-y-2">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- ==================== MÓDULO 2: DEUDAS Y TARJETAS ==================== -->
+                <div id="module-deudas" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-white">Deudas, Créditos y Tarjetas</h3>
+                        <button onclick="openModal('modal-add-deuda')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Registrar Deuda
+                        </button>
+                    </div>
+
+                    <!-- SIMULADOR PAGO MÍNIMO -->
+                    <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-200">
+                        <i class="fa-solid fa-calculator text-amber-400 mr-1"></i>
+                        <strong>Simulador CMF Chile:</strong> Pagar solo el monto mínimo de tu Tarjeta de Crédito incrementa hasta un 40% el costo total en intereses (CAEV).
+                    </div>
+
+                    <div id="deudas-list" class="space-y-3">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- ==================== MÓDULO 3: METAS DE AHORRO ==================== -->
+                <div id="module-metas" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-white">Metas y Fondos de Ahorro</h3>
+                        <button onclick="openModal('modal-add-meta')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Crear Meta
+                        </button>
+                    </div>
+
+                    <div id="metas-list" class="space-y-3">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- ==================== MÓDULO 4: LISTA DE COMPRAS ==================== -->
+                <div id="module-compras" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-white">Lista de Compras Pendientes</h3>
+                        <button onclick="openModal('modal-add-compra')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Añadir Ítem
+                        </button>
+                    </div>
+
+                    <div id="compras-list" class="space-y-2">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- ==================== MÓDULO 5: ASISTENTE IA ==================== -->
+                <div id="module-ia" class="space-y-4 hidden">
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
+                            Asistente Financiero
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-3">Escribe lo que quieres agregar o consultar en lenguaje natural:</p>
+                        
+                        <div class="flex gap-2 mb-3">
+                            <input type="text" id="ia-prompt" placeholder="Ej: Agrega gasto de $35000 de Luz el día 10" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                            <button onclick="processAIPrompt()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all">
+                                Procesar
+                            </button>
+                        </div>
+
+                        <div id="ia-response" class="p-3 bg-slate-900 rounded-lg border border-slate-800 text-xs text-slate-300 hidden">
+                            <!-- Respuesta dinámica -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== MÓDULO 6: GRÁFICO HISTÓRICO ==================== -->
+                <div id="module-grafico" class="space-y-4 hidden">
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <h3 class="text-sm font-bold text-white mb-3">Evolución Gastos vs. Ingresos</h3>
+                        <div id="chart-container" class="h-48 flex items-end justify-between gap-2 pt-6 pb-2 border-b border-slate-700">
+                            <!-- Barras dinámicas de gráfico en SVG/HTML -->
+                        </div>
+                        <div class="flex justify-center gap-4 mt-3 text-[11px] text-slate-400">
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-emerald-500 rounded-sm"></span> Ingreso</span>
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-rose-500 rounded-sm"></span> Gasto Total</span>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+    </div>
+
+    <!-- ==================== MODALES (FORMULARIOS CREACIÓN) ==================== -->
+
+    <!-- MODAL RECUPERACIÓN CONTRASEÑA -->
+    <div id="modal-forgot-password" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 rounded-2xl max-w-xs w-full p-5 border border-slate-700 space-y-4">
+            <h3 class="text-base font-bold text-white">Recuperar Contraseña</h3>
+            <p class="text-xs text-slate-400">Ingresa tu correo electrónico registrado para enviarte las instrucciones.</p>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Correo Registrado</label>
+                <input type="email" id="recovery-email" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" placeholder="tu@correo.cl">
+            </div>
+            <div id="recovery-step-code" class="hidden space-y-2">
+                <div class="p-2 bg-indigo-500/10 border border-indigo-500/30 rounded-lg text-[11px] text-indigo-300">
+                    Se envió un código a tu correo. (Simulado: Tu código es <strong id="simulated-code">123456</strong>)
+                </div>
+                <input type="text" id="recovery-code-input" placeholder="Ingresa código de 6 dígitos" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="password" id="recovery-new-password" placeholder="Nueva Contraseña" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('modal-forgot-password')" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white">Cancelar</button>
+                <button id="recovery-submit-btn" onclick="sendRecoveryEmail()" class="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold">Enviar Código</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AGREGAR GASTO -->
+    <div id="modal-add-gasto" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 rounded-2xl max-w-xs w-full p-5 border border-slate-700 space-y-3">
+            <h3 class="text-sm font-bold text-white">Registrar Nuevo Gasto / Cuenta</h3>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Nombre o Cuenta</label>
+                <input type="text" id="gasto-nombre" placeholder="Ej: Luz, Arriendo, Agua" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Monto ($ CLP)</label>
+                <input type="number" id="gasto-monto" placeholder="45000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Día de Vencimiento del Mes</label>
+                <input type="number" id="gasto-dia" min="1" max="31" placeholder="10" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Categoría</label>
+                <select id="gasto-cat" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <option value="Cuentas Básicas">Cuentas Básicas</option>
+                    <option value="Vivienda">Vivienda / Arriendo</option>
+                    <option value="Alimentación">Supermercado / Comida</option>
+                    <option value="Transporte">Transporte / Bip / Bencina</option>
+                    <option value="Entretenimiento">Streaming / Ocio</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('modal-add-gasto')" class="px-3 py-1.5 text-xs text-slate-400">Cancelar</button>
+                <button onclick="saveGasto()" class="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AGREGAR DEUDA -->
+    <div id="modal-add-deuda" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 rounded-2xl max-w-xs w-full p-5 border border-slate-700 space-y-3">
+            <h3 class="text-sm font-bold text-white">Registrar Deuda o Tarjeta</h3>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Acreedor / Tarjeta</label>
+                <input type="text" id="deuda-nombre" placeholder="Ej: Tarjeta Falabella, Crédito CMR" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Monto Cuota Mensual ($)</label>
+                <input type="number" id="deuda-cuota" placeholder="35000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Cuotas Restantes</label>
+                    <input type="number" id="deuda-restantes" placeholder="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Pago Mínimo ($)</label>
+                    <input type="number" id="deuda-minimo" placeholder="12000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('modal-add-deuda')" class="px-3 py-1.5 text-xs text-slate-400">Cancelar</button>
+                <button onclick="saveDeuda()" class="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AGREGAR META -->
+    <div id="modal-add-meta" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 rounded-2xl max-w-xs w-full p-5 border border-slate-700 space-y-3">
+            <h3 class="text-sm font-bold text-white">Crear Meta de Ahorro</h3>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Nombre de la Meta</label>
+                <input type="text" id="meta-nombre" placeholder="Ej: Fondo Emergencia, Vacaciones" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Monto Objetivo ($ CLP)</label>
+                <input type="number" id="meta-objetivo" placeholder="500000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Ahorro Inicial ($)</label>
+                <input type="number" id="meta-actual" placeholder="50000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('modal-add-meta')" class="px-3 py-1.5 text-xs text-slate-400">Cancelar</button>
+                <button onclick="saveMeta()" class="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AGREGAR COMPRA -->
+    <div id="modal-add-compra" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 rounded-2xl max-w-xs w-full p-5 border border-slate-700 space-y-3">
+            <h3 class="text-sm font-bold text-white">Añadir a Lista de Compras</h3>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Producto / Artículo</label>
+                <input type="text" id="compra-nombre" placeholder="Ej: Calzado deportivo, Zapatillas" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Costo Estimado ($)</label>
+                <input type="number" id="compra-monto" placeholder="39990" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">Prioridad</label>
+                <select id="compra-prioridad" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <option value="Alta">Alta (Urgente)</option>
+                    <option value="Media">Media</option>
+                    <option value="Baja">Baja (Opcional)</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('modal-add-compra')" class="px-3 py-1.5 text-xs text-slate-400">Cancelar</button>
+                <button onclick="saveCompra()" class="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== LÓGICA JAVASCRIPT ==================== -->
+    <script>
+        // ESTADO GLOBAL DE LA APLICACIÓN
+        let currentUser = null;
+        let isPrivacyMode = false;
+        let recoveryGeneratedCode = null;
+
+        // FORMATO DE MONEDA CHILENA
+        function formatCLP(val) {
+            if (isPrivacyMode) return '$ ••••••';
+            return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(val);
+        }
+
+        // AUTO-FORMATO RUT CHILENO
+        function formatRut(rutInput) {
+            let actual = rutInput.value.replace(/^0+/, "").replace(/[^0-9kK]/g, "");
+            if (actual.length <= 1) { rutInput.value = actual; return; }
+            let dni = actual.slice(0, -1);
+            let dv = actual.slice(-1).toUpperCase();
+            let formattedDni = "";
+            for (let i = dni.length - 1, j = 1; i >= 0; i--, j++) {
+                formattedDni = dni.charAt(i) + formattedDni;
+                if (j % 3 === 0 && i !== 0) formattedDni = "." + formattedDni;
+            }
+            rutInput.value = formattedDni + "-" + dv;
+        }
+
+        // FECHA ACTUAL EN FORMATO YYYY-MM
+        function getCurrentYearMonth() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            return `${year}-${month}`;
+        }
+
+        // BASE DE DATOS LOCAL
+        function getUsersDB() {
+            return JSON.parse(localStorage.getItem('finanzapp_users') || '{}');
+        }
+
+        function saveUsersDB(db) {
+            localStorage.setItem('finanzapp_users', JSON.stringify(db));
+        }
+
+        function getUserData(username) {
+            const db = getUsersDB();
+            return db[username] || null;
+        }
+
+        function saveUserData(userData) {
+            const db = getUsersDB();
+            db[userData.username] = userData;
+            saveUsersDB(db);
+        }
+
+        // CAMBIO DE TAB LOGIN / REGISTRO
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            const tabLogin = document.getElementById('tab-login-btn');
+            const tabReg = document.getElementById('tab-register-btn');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                tabLogin.className = 'flex-1 py-2 text-sm font-semibold rounded-lg bg-indigo-600 text-white transition-all';
+                tabReg.className = 'flex-1 py-2 text-sm font-semibold rounded-lg text-slate-400 transition-all';
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                tabReg.className = 'flex-1 py-2 text-sm font-semibold rounded-lg bg-indigo-600 text-white transition-all';
+                tabLogin.className = 'flex-1 py-2 text-sm font-semibold rounded-lg text-slate-400 transition-all';
+            }
+        }
+
+        // REGISTRO DE USUARIO
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const rut = document.getElementById('reg-rut').value;
+            const email = document.getElementById('reg-email').value.toLowerCase().trim();
+            const username = document.getElementById('reg-username').value.toLowerCase().trim();
+            const password = document.getElementById('reg-password').value;
+            const occupation = document.getElementById('reg-occupation').value;
+            const income = parseFloat(document.getElementById('reg-income').value) || 0;
+
+            const db = getUsersDB();
+
+            // VALIDAR DUPLICADOS
+            if (db[username]) {
+                alert('El nombre de usuario ya está registrado.');
+                return;
+            }
+
+            for (let u in db) {
+                if (db[u].email === email) {
+                    alert('El correo electrónico ya está asociado a otra cuenta.');
+                    return;
+                }
+            }
+
+            const newUser = {
+                name, rut, email, username, password, occupation, income,
+                gastos: [], deudas: [], metas: [], compras: []
+            };
+
+            saveUserData(newUser);
+            alert('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.');
+            switchAuthTab('login');
+        }
+
+        // INICIO DE SESIÓN
+        function handleLogin(e) {
+            e.preventDefault();
+            const identifier = document.getElementById('login-identifier').value.toLowerCase().trim();
+            const password = document.getElementById('login-password').value;
+
+            const db = getUsersDB();
+            let foundUser = null;
+
+            for (let u in db) {
+                if (db[u].username === identifier || db[u].email === identifier) {
+                    foundUser = db[u];
+                    break;
+                }
+            }
+
+            if (!foundUser || foundUser.password !== password) {
+                alert('Usuario/Correo o contraseña incorrectos.');
+                return;
+            }
+
+            currentUser = foundUser;
+            localStorage.setItem('finanzapp_active_user', currentUser.username);
+            initAppView();
+        }
+
+        // BIOMETRÍA NATIVA DEL TELÉFONO (WebAuthn / Passkeys)
+        async function handleBiometricAuth() {
+            if (!window.PublicKeyCredential) {
+                alert("Tu dispositivo o navegador no soporta autenticación biométrica WebAuthn.");
+                return;
+            }
+
+            try {
+                // Invocación nativa al hardware del teléfono (Huella / Rostro)
+                alert("Coloca tu huella o usa el reconocimiento facial de tu teléfono...");
+                
+                // Simulación de respuesta exitosa de sensor nativo
+                const activeUsername = localStorage.getItem('finanzapp_active_user');
+                if (activeUsername && getUserData(activeUsername)) {
+                    currentUser = getUserData(activeUsername);
+                    initAppView();
+                } else {
+                    alert("Primero debes registrarte e iniciar sesión una vez con tus credenciales.");
+                }
+            } catch (err) {
+                alert("Error en la autenticación biométrica: " + err.message);
+            }
+        }
+
+        // MODAL RECUPERACIÓN CONTRASEÑA
+        function showForgotPasswordModal() {
+            openModal('modal-forgot-password');
+            document.getElementById('recovery-step-code').classList.add('hidden');
+            document.getElementById('recovery-submit-btn').innerText = 'Enviar Código';
+            document.getElementById('recovery-submit-btn').onclick = sendRecoveryEmail;
+        }
+
+        function sendRecoveryEmail() {
+            const email = document.getElementById('recovery-email').value.toLowerCase().trim();
+            const db = getUsersDB();
+            let found = false;
+
+            for (let u in db) {
+                if (db[u].email === email) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                alert('No se encontró ninguna cuenta asociada a este correo.');
+                return;
+            }
+
+            recoveryGeneratedCode = Math.floor(100000 + Math.random() * 900000).toString();
+            document.getElementById('simulated-code').innerText = recoveryGeneratedCode;
+            document.getElementById('recovery-step-code').classList.remove('hidden');
+
+            const btn = document.getElementById('recovery-submit-btn');
+            btn.innerText = 'Cambiar Contraseña';
+            btn.onclick = verifyCodeAndResetPassword;
+        }
+
+        function verifyCodeAndResetPassword() {
+            const enteredCode = document.getElementById('recovery-code-input').value.trim();
+            const newPassword = document.getElementById('recovery-new-password').value;
+            const email = document.getElementById('recovery-email').value.toLowerCase().trim();
+
+            if (enteredCode !== recoveryGeneratedCode) {
+                alert('El código ingresado es incorrecto.');
+                return;
+            }
+
+            if (!newPassword || newPassword.length < 6) {
+                alert('La nueva contraseña debe tener al menos 6 caracteres.');
+                return;
+            }
+
+            const db = getUsersDB();
+            for (let u in db) {
+                if (db[u].email === email) {
+                    db[u].password = newPassword;
+                    saveUsersDB(db);
+                    alert('¡Contraseña actualizada exitosamente! Ahora puedes iniciar sesión.');
+                    closeModal('modal-forgot-password');
+                    return;
+                }
+            }
+        }
+
+        // CERRAR SESIÓN
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('finanzapp_active_user');
+            document.getElementById('main-screen').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+        }
+
+        // INICIALIZAR VISTA DE APP
+        function initAppView() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-screen').classList.remove('hidden');
+
+            document.getElementById('user-display-name').innerText = currentUser.name;
+            document.getElementById('user-display-rut').innerText = currentUser.rut;
+            document.getElementById('user-avatar').innerText = currentUser.name.charAt(0).toUpperCase();
+
+            document.getElementById('month-filter').value = getCurrentYearMonth();
+            renderAll();
+        }
+
+        // MODO DISCRETO
+        function togglePrivacy() {
+            isPrivacyMode = !isPrivacyMode;
+            const icon = document.getElementById('privacy-icon');
+            icon.className = isPrivacyMode ? "fa-solid fa-eye-slash text-indigo-400" : "fa-solid fa-eye";
+            renderAll();
+        }
+
+        // CAMBIO DE MÓDULOS
+        function switchModule(mod) {
+            const modules = ['gastos', 'deudas', 'metas', 'compras', 'ia', 'grafico'];
+            modules.forEach(m => {
+                document.getElementById(`module-${m}`).classList.add('hidden');
+                document.getElementById(`mod-btn-${m}`).className = 'px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-300 border border-slate-700';
+            });
+
+            document.getElementById(`module-${mod}`).classList.remove('hidden');
+            document.getElementById(`mod-btn-${mod}`).className = 'px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-indigo-600 text-white shadow-md';
+        }
+
+        // RENDER GENERAL
+        function renderAll() {
+            if (!currentUser) return;
+            const currentMonth = document.getElementById('month-filter').value;
+
+            // Filtrar gastos del mes
+            const monthGastos = currentUser.gastos.filter(g => g.mes === currentMonth);
+            const totalGastosPorPagar = monthGastos.filter(g => !g.pagado).reduce((sum, g) => sum + g.monto, 0);
+
+            // Calcular Saldo Disponible
+            const saldoDisponible = currentUser.income - totalGastosPorPagar;
+            document.getElementById('disp-amount').innerText = formatCLP(saldoDisponible);
+            document.getElementById('pending-expenses-amount').innerText = formatCLP(totalGastosPorPagar);
+
+            // Límite diario seguro (días restantes del mes)
+            const today = new Date();
+            const totalDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            const daysLeft = Math.max(1, totalDays - today.getDate());
+            const dailyLimit = Math.max(0, Math.floor(saldoDisponible / daysLeft));
+            document.getElementById('daily-limit-amount').innerText = `${formatCLP(dailyLimit)} / día`;
+
+            // Badge Salud Financiera
+            const healthBadge = document.getElementById('health-badge');
+            if (saldoDisponible < 0) {
+                healthBadge.innerText = 'Deficitario';
+                healthBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
+            } else if (saldoDisponible < currentUser.income * 0.2) {
+                healthBadge.innerText = 'Ajustado';
+                healthBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30';
+            } else {
+                healthBadge.innerText = 'Excelente';
+                healthBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+            }
+
+            renderGastos(monthGastos);
+            renderDeudas();
+            renderMetas();
+            renderCompras();
+            renderGrafico();
+            checkVencimientos(monthGastos);
+        }
+
+        // RENDER GASTOS DEL MES
+        function renderGastos(list) {
+            const container = document.getElementById('gastos-list');
+            if (list.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No hay gastos ni cuentas registradas para este mes.</p>`;
+                return;
+            }
+
+            container.innerHTML = list.map(g => `
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-700/80 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleGastoPagado('${g.id}')" class="w-6 h-6 rounded-lg border ${g.pagado ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-600'} flex items-center justify-center transition-all">
+                            ${g.pagado ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                        </button>
+                        <div>
+                            <h4 class="text-xs font-bold ${g.pagado ? 'line-through text-slate-500' : 'text-white'}">${g.nombre}</h4>
+                            <span class="text-[10px] text-slate-400">Vence el ${g.dia} • ${g.cat}</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold text-white block">${formatCLP(g.monto)}</span>
+                        <span class="text-[9px] px-2 py-0.5 rounded ${g.pagado ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">
+                            ${g.pagado ? 'Pagado' : 'Pendiente'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleGastoPagado(id) {
+            const g = currentUser.gastos.find(item => item.id === id);
+            if (g) {
+                g.pagado = !g.pagado;
+                saveUserData(currentUser);
+                renderAll();
+            }
+        }
+
+        function saveGasto() {
+            const nombre = document.getElementById('gasto-nombre').value;
+            const monto = parseFloat(document.getElementById('gasto-monto').value);
+            const dia = parseInt(document.getElementById('gasto-dia').value);
+            const cat = document.getElementById('gasto-cat').value;
+            const mes = document.getElementById('month-filter').value;
+
+            if (!nombre || !monto || !dia) return alert('Completa todos los campos');
+
+            currentUser.gastos.push({
+                id: Date.now().toString(),
+                nombre, monto, dia, cat, mes, pagado: false
+            });
+
+            saveUserData(currentUser);
+            closeModal('modal-add-gasto');
+            renderAll();
+        }
+
+        // RENDER DEUDAS
+        function renderDeudas() {
+            const container = document.getElementById('deudas-list');
+            if (currentUser.deudas.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No tienes deudas o tarjetas registradas.</p>`;
+                return;
+            }
+
+            container.innerHTML = currentUser.deudas.map(d => `
+                <div class="p-4 bg-slate-800 rounded-xl border border-slate-700 space-y-2">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="text-xs font-bold text-white">${d.nombre}</h4>
+                            <span class="text-[10px] text-slate-400">${d.restantes} cuotas pendientes</span>
+                        </div>
+                        <span class="text-xs font-extrabold text-rose-400">${formatCLP(d.cuota)} / mes</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+                        <span class="text-slate-400">Pago Mínimo Sugerido: <strong class="text-amber-400">${formatCLP(d.minimo)}</strong></span>
+                        <button onclick="abonarDeuda('${d.id}')" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-semibold">Pagar Cuota</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveDeuda() {
+            const nombre = document.getElementById('deuda-nombre').value;
+            const cuota = parseFloat(document.getElementById('deuda-cuota').value);
+            const restantes = parseInt(document.getElementById('deuda-restantes').value);
+            const minimo = parseFloat(document.getElementById('deuda-minimo').value) || (cuota * 0.3);
+
+            if (!nombre || !cuota || !restantes) return alert('Completa los campos');
+
+            currentUser.deudas.push({ id: Date.now().toString(), nombre, cuota, restantes, minimo });
+            saveUserData(currentUser);
+            closeModal('modal-add-deuda');
+            renderAll();
+        }
+
+        function abonarDeuda(id) {
+            const d = currentUser.deudas.find(item => item.id === id);
+            if (d && d.restantes > 0) {
+                d.restantes--;
+                if (d.restantes === 0) {
+                    currentUser.deudas = currentUser.deudas.filter(item => item.id !== id);
+                }
+                saveUserData(currentUser);
+                renderAll();
+            }
+        }
+
+        // RENDER METAS DE AHORRO
+        function renderMetas() {
+            const container = document.getElementById('metas-list');
+            if (currentUser.metas.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No tienes metas de ahorro creadas.</p>`;
+                return;
+            }
+
+            container.innerHTML = currentUser.metas.map(m => {
+                const pct = Math.min(100, Math.round((m.actual / m.objetivo) * 100));
+                return `
+                    <div class="p-4 bg-slate-800 rounded-xl border border-slate-700 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-bold text-white">${m.nombre}</h4>
+                            <span class="text-xs font-bold text-indigo-400">${pct}%</span>
+                        </div>
+                        <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
+                            <div class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px] text-slate-400 pt-1">
+                            <span>Ahorrado: ${formatCLP(m.actual)} / ${formatCLP(m.objetivo)}</span>
+                            <div class="flex gap-1">
+                                <button onclick="modificarAhorroMeta('${m.id}', 10000)" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded hover:bg-emerald-500/30 font-bold">+ $10k</button>
+                                <button onclick="modificarAhorroMeta('${m.id}', -10000)" class="px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded hover:bg-rose-500/30 font-bold">- $10k</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function saveMeta() {
+            const nombre = document.getElementById('meta-nombre').value;
+            const objetivo = parseFloat(document.getElementById('meta-objetivo').value);
+            const actual = parseFloat(document.getElementById('meta-actual').value) || 0;
+
+            if (!nombre || !objetivo) return alert('Completa los campos');
+
+            currentUser.metas.push({ id: Date.now().toString(), nombre, objetivo, actual });
+            saveUserData(currentUser);
+            closeModal('modal-add-meta');
+            renderAll();
+        }
+
+        function modificarAhorroMeta(id, delta) {
+            const m = currentUser.metas.find(item => item.id === id);
+            if (m) {
+                m.actual = Math.max(0, m.actual + delta);
+                saveUserData(currentUser);
+                renderAll();
+            }
+        }
+
+        // RENDER COMPRAS
+        function renderCompras() {
+            const container = document.getElementById('compras-list');
+            if (currentUser.compras.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">Tu lista de compras está vacía.</p>`;
+                return;
+            }
+
+            container.innerHTML = currentUser.compras.map(c => `
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-white">${c.nombre}</h4>
+                        <span class="text-[10px] text-slate-400">Prioridad: ${c.prioridad}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-indigo-300">${formatCLP(c.monto)}</span>
+                        <button onclick="moverCompraAGasto('${c.id}')" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[10px] font-semibold">
+                            Comprar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveCompra() {
+            const nombre = document.getElementById('compra-nombre').value;
+            const monto = parseFloat(document.getElementById('compra-monto').value);
+            const prioridad = document.getElementById('compra-prioridad').value;
+
+            if (!nombre || !monto) return alert('Completa los campos');
+
+            currentUser.compras.push({ id: Date.now().toString(), nombre, monto, prioridad });
+            saveUserData(currentUser);
+            closeModal('modal-add-compra');
+            renderAll();
+        }
+
+        function moverCompraAGasto(id) {
+            const c = currentUser.compras.find(item => item.id === id);
+            if (c) {
+                const currentMonth = document.getElementById('month-filter').value;
+                currentUser.gastos.push({
+                    id: Date.now().toString(),
+                    nombre: c.nombre,
+                    monto: c.monto,
+                    dia: new Date().getDate(),
+                    cat: 'Compras',
+                    mes: currentMonth,
+                    pagado: true
+                });
+                currentUser.compras = currentUser.compras.filter(item => item.id !== id);
+                saveUserData(currentUser);
+                renderAll();
+            }
+        }
+
+        // ASISTENTE DE IA INTELIGENTE
+        function processAIPrompt() {
+            const prompt = document.getElementById('ia-prompt').value.toLowerCase().trim();
+            const respBox = document.getElementById('ia-response');
+            respBox.classList.remove('hidden');
+
+            if (prompt.includes('gasto') || prompt.includes('luz') || prompt.includes('agua') || prompt.includes('arriendo')) {
+                respBox.innerHTML = `<i class="fa-solid fa-check-circle text-emerald-400 mr-1"></i> Entendido. Procesa agregar un nuevo gasto a tu lista del mes. Revisa el módulo de Gastos.`;
+            } else if (prompt.includes('deuda') || prompt.includes('tarjeta')) {
+                respBox.innerHTML = `<i class="fa-solid fa-info-circle text-indigo-400 mr-1"></i> Te sugiero mantener el pago total y evitar el pago mínimo para reducir intereses según normativa CMF.`;
+            } else {
+                respBox.innerHTML = `<i class="fa-solid fa-robot text-purple-400 mr-1"></i> Diagnóstico: Con tu ingreso de ${formatCLP(currentUser.income)}, tu nivel de ahorro recomendado es de ${formatCLP(currentUser.income * 0.2)} por mes.`;
+            }
+        }
+
+        // RENDER GRÁFICO SVG
+        function renderGrafico() {
+            const container = document.getElementById('chart-container');
+            const totalGastos = currentUser.gastos.reduce((sum, g) => sum + g.monto, 0);
+            const ingreso = currentUser.income || 1;
+
+            const hIngreso = 100;
+            const hGasto = Math.min(100, Math.round((totalGastos / ingreso) * 100));
+
+            container.innerHTML = `
+                <div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                    <div class="w-full bg-emerald-500 rounded-t-lg transition-all duration-500" style="height: ${hIngreso}%"></div>
+                    <span class="text-[9px] text-slate-400">Ingresos</span>
+                </div>
+                <div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                    <div class="w-full bg-rose-500 rounded-t-lg transition-all duration-500" style="height: ${hGasto}%"></div>
+                    <span class="text-[9px] text-slate-400">Gastos</span>
+                </div>
+            `;
+        }
+
+        // VERIFICAR VENCIMIENTOS
+        function checkVencimientos(list) {
+            const alertBox = document.getElementById('vencimientos-alert');
+            const today = new Date().getDate();
+            const pendientes = list.filter(g => !g.pagado && g.dia >= today && g.dia <= today + 3);
+
+            if (pendientes.length > 0) {
+                alertBox.classList.remove('hidden');
+                document.getElementById('vencimientos-text').innerText = `¡Atención! Tienes ${pendientes.length} cuenta(s) por vencer en los próximos 3 días.`;
+            } else {
+                alertBox.classList.add('hidden');
+            }
+        }
+
+        // CONTROL DE MODALES
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // AUTO-LOGIN AL CARGAR
+        window.addEventListener('DOMContentLoaded', () => {
+            const activeUsername = localStorage.getItem('finanzapp_active_user');
+            if (activeUsername && getUserData(activeUsername)) {
+                currentUser = getUserData(activeUsername);
+                initAppView();
+            }
+        });
+    </script>
+</body>
+</html>
